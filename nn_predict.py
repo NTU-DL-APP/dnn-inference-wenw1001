@@ -21,17 +21,29 @@ def dense(x, W, b):
 
 
 # === Conv2D ===
+import numpy as np
+
 def conv2d(x, W, b, stride=1, padding=0):
     """
-    x: Input image, shape (N, H, W, C)
+    x: Input image, shape (N, H, W, C) or (N, 784)
     W: Filters, shape (KH, KW, C, F)
     b: Biases, shape (F,)
     stride: int
     padding: int
     Return: Output after convolution, shape (N, H_out, W_out, F)
     """
+
+    # 如果 x 是 2D (N, 784)，假設 28x28 灰階圖，補成 (N, 28, 28, 1)
+    if x.ndim == 2:
+        N = x.shape[0]
+        side_len = int(np.sqrt(x.shape[1]))
+        if side_len * side_len != x.shape[1]:
+            raise ValueError("Input size is not a perfect square for reshaping")
+        x = x.reshape(N, side_len, side_len, 1)
+
     N, H, W_, C = x.shape
-    KH, KW, _, F = W.shape
+    KH, KW, C_w, F = W.shape
+    assert C == C_w, f"Input channels {C} and filter channels {C_w} mismatch"
 
     # Zero padding
     x_padded = np.pad(x, ((0, 0), (padding, padding), (padding, padding), (0, 0)), mode='constant')
@@ -52,14 +64,30 @@ def conv2d(x, W, b, stride=1, padding=0):
                     out[n, h, w, f] = np.sum(region * W[:, :, :, f]) + b[f]
 
     return out
+
     
 # === MaxPooling2D ===
+import numpy as np
+
 def maxpool2d(x, pool_size=2, stride=2):
     """
-    x: Input image, shape (N, H, W, C)
+    x: Input image, shape (N, H, W, C) or (N, 784)
     Return: Downsampled output
     """
+    if isinstance(pool_size, (tuple, list)):
+        pool_size = pool_size[0]
+    if isinstance(stride, (tuple, list)):
+        stride = stride[0]
+    # 如果 x 是 2D (N, 784)，假設 28x28 灰階圖，補成 (N, 28, 28, 1)
+    if x.ndim == 2:
+        N = x.shape[0]
+        side_len = int(np.sqrt(x.shape[1]))
+        if side_len * side_len != x.shape[1]:
+            raise ValueError("Input size is not a perfect square for reshaping")
+        x = x.reshape(N, side_len, side_len, 1)
+        
     N, H, W, C = x.shape
+
     H_out = (H - pool_size) // stride + 1
     W_out = (W - pool_size) // stride + 1
     out = np.zeros((N, H_out, W_out, C))
@@ -76,6 +104,7 @@ def maxpool2d(x, pool_size=2, stride=2):
                     out[n, h, w, c] = np.max(region)
 
     return out
+
 
 # === Dropout ===
 def dropout(x, rate=0.5, training=True):
@@ -115,19 +144,19 @@ def dropout(x, rate=0.5, training=True):
 def nn_forward_h5(model_arch, weights, data, training=False):
     x = data
     for layer in model_arch:
-        lname = layer['name']
         ltype = layer['type']
         cfg = layer['config']
         wnames = layer['weights']
 
         if ltype == "Conv2D":
-            W = weights[wnames[0]]  # (KH, KW, C, F)
-            b = weights[wnames[1]]  # (F,)
+            W = weights[wnames[0]]
+            b = weights[wnames[1]]
             stride = cfg.get("strides", (1, 1))[0]
             padding = cfg.get("padding", "valid")
-            pad = 0
             if padding == "same":
                 pad = W.shape[0] // 2
+            else:
+                pad = 0
             x = conv2d(x, W, b, stride=stride, padding=pad)
 
         elif ltype == "MaxPooling2D":
@@ -147,11 +176,12 @@ def nn_forward_h5(model_arch, weights, data, training=False):
             b = weights[wnames[1]]
             x = dense(x, W, b)
             activation = cfg.get("activation")
-            if activation == "relu":
-                x = relu(x)
-            elif activation == "softmax":
-                x = softmax(x)
-
+            activation_funcs = {
+                "relu": relu,
+                "softmax": softmax,
+            }
+            if activation in activation_funcs:
+                x = activation_funcs[activation](x)
     return x
 
 
