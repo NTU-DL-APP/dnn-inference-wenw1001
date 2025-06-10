@@ -1,0 +1,86 @@
+[
+  {
+    "name": "conv2d",
+    "type": "Conv2D",
+    "config": {},
+    "weights": []
+  },
+  {
+    "name": "max_pooling2d",
+    "type": "MaxPooling2D",
+    "config": {},
+    "weights": []
+  },
+  {
+    "name": "dropout",
+    "type": "Dropout",
+    "config": {},
+    "weights": []
+  },
+  {
+    "name": "conv2d_1",
+    "type": "Conv2D",
+    "config": {},
+    "weights": []
+  },
+  {
+    "name": "max_pooling2d_1",
+    "type": "MaxPooling2D",
+    "config": {},
+    "weights": []
+  },
+  {
+    "name": "dropout_1",
+    "type": "Dropout",
+    "config": {},
+    "weights": []
+  },
+  {
+    "name": "conv2d_2",
+    "type": "Conv2D",
+    "config": {},
+    "weights": []
+  },
+  {
+    "name": "dropout_2",
+    "type": "Dropout",
+    "config": {},
+    "weights": []
+  },
+  {
+    "name": "flatten",
+    "type": "Flatten",
+    "config": {},
+    "weights": []
+  },
+  {
+    "name": "dense",
+    "type": "Dense",
+    "config": {
+      "units": 128,
+      "activation": "relu"
+    },
+    "weights": [
+      "kernel",
+      "bias"
+    ]
+  },
+  {
+    "name": "dropout_3",
+    "type": "Dropout",
+    "config": {},
+    "weights": []
+  },
+  {
+    "name": "dense_1",
+    "type": "Dense",
+    "config": {
+      "units": 10,
+      "activation": "softmax"
+    },
+    "weights": [
+      "kernel",
+      "bias"
+    ]
+  }
+]
